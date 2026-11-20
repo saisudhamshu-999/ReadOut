@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Root user document
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Users cannot list other users
+      allow create: if isOwner(userId) && isValidId(userId);
+      allow update: if isOwner(userId) && isValidId(userId);
+      allow delete: if isOwner(userId) && isValidId(userId);
+
+      // User's lab reports subcollection
+      match /reports/{reportId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(reportId);
+        allow update: if isOwner(userId) && isValidId(reportId);
+        allow delete: if isOwner(userId) && isValidId(reportId);
+      }
+
+      // User's multi-turn Gemini chat history subcollection
+      match /chats/{chatId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(chatId);
+        allow update: if isOwner(userId) && isValidId(chatId);
+        allow delete: if isOwner(userId) && isValidId(chatId);
+      }
+
+      // User's generated/edited medical visual assets
+      match /images/{imageId} {
+        allow get, list: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(imageId);
+        allow update: if isOwner(userId) && isValidId(imageId);
+        allow delete: if isOwner(userId) && isValidId(imageId);
+      }
+    }
+
+    // Default deny all other paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

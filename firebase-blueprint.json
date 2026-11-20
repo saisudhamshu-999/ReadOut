@@ -1,0 +1,81 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with authentication and preference metadata",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email", "description": "User email address" },
+        "displayName": { "type": "string", "description": "User full name" },
+        "photoURL": { "type": "string", "description": "Avatar URL" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Account registration timestamp" }
+      },
+      "required": ["id", "email"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "Patient lab report record stored in Firestore",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique report identifier" },
+        "userId": { "type": "string", "description": "Owner user UID" },
+        "patientName": { "type": "string", "description": "Patient display or de-identified name" },
+        "reportDate": { "type": "string", "description": "Date of lab test sample" },
+        "labName": { "type": "string", "description": "Diagnostic laboratory name" },
+        "parameters": { "type": "array", "description": "Extracted biomarker parameters list" },
+        "patientContext": { "type": "object", "description": "Context such as fasting hours, age, medications" },
+        "clinicianSummary": { "type": "string", "description": "Generated clinician discussion summary" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["id", "userId"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Multi-turn Gemini chat conversation record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique message or conversation ID" },
+        "userId": { "type": "string", "description": "Owner user UID" },
+        "role": { "type": "string", "enum": ["user", "model", "system"], "description": "Message author role" },
+        "content": { "type": "string", "description": "Text content of message" },
+        "model": { "type": "string", "description": "Gemini model used (gemini-3.1-pro-preview, gemini-3.5-flash, gemini-3.1-flash-lite)" },
+        "rolePersona": { "type": "string", "description": "Configured chatbot role persona" },
+        "timestamp": { "type": "string", "format": "date-time", "description": "Message timestamp" }
+      },
+      "required": ["id", "userId", "role", "content"]
+    },
+    "HealthImage": {
+      "title": "HealthImage",
+      "description": "Generated or edited clinical visual asset created via Gemini image preview",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique image asset ID" },
+        "userId": { "type": "string", "description": "Owner user UID" },
+        "prompt": { "type": "string", "description": "Text prompt used for generation or edit" },
+        "mode": { "type": "string", "enum": ["create", "edit"], "description": "Whether image was newly created or edited from an existing visual" },
+        "imageUrl": { "type": "string", "description": "Base64 data URL or storage URL" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Creation timestamp" }
+      },
+      "required": ["id", "userId", "prompt", "imageUrl"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile document"
+    },
+    "/users/{userId}/reports/{reportId}": {
+      "schema": "Report",
+      "description": "User persistent laboratory reports"
+    },
+    "/users/{userId}/chats/{chatId}": {
+      "schema": "ChatMessage",
+      "description": "User multi-turn Gemini chat history"
+    },
+    "/users/{userId}/images/{imageId}": {
+      "schema": "HealthImage",
+      "description": "User generated medical visual infographics and edited illustrations"
+    }
+  }
+}
